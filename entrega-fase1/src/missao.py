@@ -125,3 +125,47 @@ def verificar_telemetria(dados: dict) -> ResultadoVerificacao:
         decisao=DECISAO_APROVADA if aprovado else DECISAO_ABORTADA,
         falhas=tuple(falhas),
     )
+
+
+# Parâmetros energéticos do veículo (premissas do projeto).
+CAPACIDADE_TOTAL_KWH = 120.0
+PERDAS_PCT = 8.0
+CONSUMO_DECOLAGEM_KWH = 45.0
+CONSUMO_VOO_KW = 6.5
+MARGEM_MINIMA_PCT = 20.0
+
+
+@dataclass(frozen=True)
+class ResultadoEnergia:
+    """Balanço energético da missão."""
+
+    disponivel_kwh: float
+    restante_kwh: float
+    autonomia_h: float
+    margem_pct: float
+    aprovado: bool
+
+
+def analisar_energia(
+    carga_pct: float,
+    capacidade_kwh: float = CAPACIDADE_TOTAL_KWH,
+    perdas_pct: float = PERDAS_PCT,
+    consumo_decolagem_kwh: float = CONSUMO_DECOLAGEM_KWH,
+    consumo_voo_kw: float = CONSUMO_VOO_KW,
+) -> ResultadoEnergia:
+    """Calcula energia disponível, autonomia de voo e margem de segurança.
+
+    A autonomia é o tempo de voo sustentável com a energia que sobra depois
+    da decolagem. Se não sobra energia, a autonomia é zero — nunca negativa.
+    """
+    disponivel = capacidade_kwh * (carga_pct / 100.0) * (1 - perdas_pct / 100.0)
+    restante = disponivel - consumo_decolagem_kwh
+    autonomia = restante / consumo_voo_kw if restante > 0 else 0.0
+    margem = (restante / consumo_decolagem_kwh) * 100.0
+    return ResultadoEnergia(
+        disponivel_kwh=disponivel,
+        restante_kwh=restante,
+        autonomia_h=autonomia,
+        margem_pct=margem,
+        aprovado=margem >= MARGEM_MINIMA_PCT,
+    )

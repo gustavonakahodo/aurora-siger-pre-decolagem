@@ -112,3 +112,44 @@ def test_todas_as_falhas_sao_reportadas_e_nao_apenas_a_primeira():
     texto = " | ".join(resultado.falhas)
     for esperado in esperados:
         assert esperado in texto
+
+
+def test_analise_energetica_do_cenario_nominal():
+    resultado = missao.analisar_energia(carga_pct=92.0)
+    assert resultado.disponivel_kwh == pytest.approx(101.568, abs=1e-3)
+    assert resultado.restante_kwh == pytest.approx(56.568, abs=1e-3)
+    assert resultado.autonomia_h == pytest.approx(8.7028, abs=1e-3)
+    assert resultado.margem_pct == pytest.approx(125.707, abs=1e-3)
+    assert resultado.aprovado is True
+
+
+def test_analise_energetica_sem_perdas_e_numeros_redondos():
+    resultado = missao.analisar_energia(
+        carga_pct=50.0, capacidade_kwh=100.0, perdas_pct=0.0,
+        consumo_decolagem_kwh=25.0, consumo_voo_kw=5.0,
+    )
+    assert resultado.disponivel_kwh == pytest.approx(50.0)
+    assert resultado.restante_kwh == pytest.approx(25.0)
+    assert resultado.autonomia_h == pytest.approx(5.0)
+    assert resultado.margem_pct == pytest.approx(100.0)
+    assert resultado.aprovado is True
+
+
+def test_margem_abaixo_do_minimo_reprova():
+    # 100 kWh x 30% = 30 disponíveis, consumo 27 -> margem 11,1 % (< 20 %)
+    resultado = missao.analisar_energia(
+        carga_pct=30.0, capacidade_kwh=100.0, perdas_pct=0.0,
+        consumo_decolagem_kwh=27.0, consumo_voo_kw=5.0,
+    )
+    assert resultado.margem_pct == pytest.approx(11.111, abs=1e-3)
+    assert resultado.aprovado is False
+
+
+def test_energia_insuficiente_para_decolar_zera_autonomia():
+    resultado = missao.analisar_energia(
+        carga_pct=10.0, capacidade_kwh=100.0, perdas_pct=0.0,
+        consumo_decolagem_kwh=45.0, consumo_voo_kw=5.0,
+    )
+    assert resultado.restante_kwh == pytest.approx(-35.0)
+    assert resultado.autonomia_h == 0.0
+    assert resultado.aprovado is False
