@@ -5,8 +5,8 @@
 | | |
 |---|---|
 | **Nome completo** | Gustavo Hiroshi Fernandes Nakahodo |
-| **RM** | `<!-- PREENCHER -->` |
-| **Turma** | `<!-- PREENCHER -->` |
+| **RM** | 576337 |
+| **Turma** | Ciência da Computação (On-Line) |
 | **Data** | 15 de setembro de 2026 |
 | **Repositório** | `<!-- PREENCHER -->` |
 

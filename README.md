@@ -5,8 +5,8 @@
 | | |
 |---|---|
 | **Nome completo** | Gustavo Hiroshi Fernandes Nakahodo |
-| **RM** | `<!-- PREENCHER -->` |
-| **Turma** | `<!-- PREENCHER -->` |
+| **RM** | 576337 |
+| **Turma** | Ciência da Computação (On-Line) |
 
 Este repositório contém a entrega da Fase 1: um verificador de telemetria
 pré-lançamento do foguete fictício Aurora-1. O programa lê a telemetria de um
