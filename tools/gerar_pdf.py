@@ -33,6 +33,8 @@ th, td { border: 1px solid #c9ccd2; padding: 5px 8px; text-align: left; }
 th { background: #f0f1f4; }
 blockquote { border-left: 3px solid #c8102e; margin-left: 0;
              padding-left: 14px; color: #4a4e57; }
+img { display: block; margin: 14px auto; max-width: 100%; max-height: 235mm;
+      page-break-inside: avoid; }
 """
 
 
@@ -41,7 +43,11 @@ def main() -> None:
     corpo = markdown.markdown(
         texto, extensions=["tables", "fenced_code", "toc", "sane_lists"]
     )
+    # O HTML é escrito em um diretório temporário, então as imagens referenciadas
+    # de forma relativa precisam de uma base apontando para docs/.
+    base = ORIGEM.parent.as_uri() + "/"
     html = (f"<!doctype html><html lang='pt-BR'><head><meta charset='utf-8'>"
+            f"<base href='{base}'>"
             f"<title>Relatório Aurora-1</title><style>{ESTILO}</style></head>"
             f"<body>{corpo}</body></html>")
 

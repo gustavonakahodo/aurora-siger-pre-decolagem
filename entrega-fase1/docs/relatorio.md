@@ -169,6 +169,14 @@ parâmetros — uma pressão excelente não compensa uma estrutura comprometida.
 
 ### 2.1 Fluxograma
 
+![Fluxograma do algoritmo de verificação pré-lançamento da missão Aurora-1](fluxograma.png)
+
+O diagrama é uma sequência vertical longa; para caber em uma página, ele está
+dividido em duas colunas — a primeira termina na verificação da pressão de
+RP-1 e a segunda retoma na verificação de integridade estrutural. O código-fonte
+Mermaid que o gera está reproduzido abaixo e é renderizado como diagrama
+diretamente pelo GitHub:
+
 ```mermaid
 flowchart TD
     A([Início]) --> B[/Ler telemetria do cenário/]
@@ -796,31 +804,36 @@ sobre o mínimo exigido.
 
 ### 4.3 Sensibilidade ao estado de carga
 
-Repetindo os quatro cálculos para estados de carga de 50 % a 100 %, mantidas
+Repetindo os quatro cálculos para estados de carga de 40 % a 100 %, mantidas
 todas as demais constantes (valores produzidos pela própria função
 `analisar_energia`):
 
 | Carga (%) | Energia disponível (kWh) | Restante após decolagem (kWh) | Autonomia (h) | Margem (%) | Parecer |
 |---|---|---|---|---|---|
-| 50 | 55.20 | 10.20 | 1.57 | 22.67 | ADEQUADA |
-| 55 | 60.72 | 15.72 | 2.42 | 34.93 | ADEQUADA |
-| 60 | 66.24 | 21.24 | 3.27 | 47.20 | ADEQUADA |
-| 65 | 71.76 | 26.76 | 4.12 | 59.47 | ADEQUADA |
-| 70 | 77.28 | 32.28 | 4.97 | 71.73 | ADEQUADA |
-| 75 | 82.80 | 37.80 | 5.82 | 84.00 | ADEQUADA |
-| 80 | 88.32 | 43.32 | 6.66 | 96.27 | ADEQUADA |
-| 85 | 93.84 | 48.84 | 7.51 | 108.53 | ADEQUADA |
-| 90 | 99.36 | 54.36 | 8.36 | 120.80 | ADEQUADA |
-| 95 | 104.88 | 59.88 | 9.21 | 133.07 | ADEQUADA |
-| 100 | 110.40 | 65.40 | 10.06 | 145.33 | ADEQUADA |
+| 40 | 44,16 | -0,84 | 0,00 | -1,87 | INSUFICIENTE |
+| 45 | 49,68 | 4,68 | 0,72 | 10,40 | INSUFICIENTE |
+| 50 | 55,20 | 10,20 | 1,57 | 22,67 | ADEQUADA |
+| 55 | 60,72 | 15,72 | 2,42 | 34,93 | ADEQUADA |
+| 60 | 66,24 | 21,24 | 3,27 | 47,20 | ADEQUADA |
+| 65 | 71,76 | 26,76 | 4,12 | 59,47 | ADEQUADA |
+| 70 | 77,28 | 32,28 | 4,97 | 71,73 | ADEQUADA |
+| 75 | 82,80 | 37,80 | 5,82 | 84,00 | ADEQUADA |
+| 80 | 88,32 | 43,32 | 6,66 | 96,27 | ADEQUADA |
+| 85 | 93,84 | 48,84 | 7,51 | 108,53 | ADEQUADA |
+| 90 | 99,36 | 54,36 | 8,36 | 120,80 | ADEQUADA |
+| 95 | 104,88 | 59,88 | 9,21 | 133,07 | ADEQUADA |
+| 100 | 110,40 | 65,40 | 10,06 | 145,33 | ADEQUADA |
 
 Dois pontos merecem atenção nessa tabela, e são o motivo de ela estar aqui.
 
-**A margem só se torna insuficiente abaixo de 48,92 % de carga.** Esse é o
-ponto em que *E*<sub>rest</sub> cai a 9,00 kWh, exatamente 20 % dos 45 kWh da
-decolagem. Abaixo de 40,76 % de carga não sobra energia alguma após a
-decolagem, e a autonomia é zerada. Ou seja: o critério de margem, isoladamente,
-autorizaria voos com metade da bateria.
+**A margem só se torna insuficiente abaixo de 48,913 % de carga.** Esse é o
+ponto exato em que *E*<sub>rest</sub> cai a 9,00 kWh, isto é, a 20 % dos 45 kWh
+da decolagem — e é por isso que a linha de 50 % da tabela ainda aprova, com
+22,67 % de margem, enquanto a de 45 % já reprova, com 10,40 %. Abaixo de
+40,76 % de carga não sobra energia alguma após a decolagem: a margem fica
+negativa e a autonomia é zerada, como mostra a primeira linha da tabela. Ou
+seja: o critério de margem, isoladamente, autorizaria voos com pouco menos da
+metade da bateria.
 
 **O critério que de fato protege a missão é o nível mínimo de carga, de 85 %,
 não a margem.** A tabela mostra que o corte em 85 % é muito mais restritivo do
@@ -851,13 +864,13 @@ carga mínima, cumprida com 92 % contra os 85 % exigidos.
 
 ### 5.1 Como esta seção foi produzida
 
-Esta análise foi realmente executada. Submetemos o prompt reproduzido abaixo a
-um modelo de linguagem — **Claude (Anthropic)** — durante o desenvolvimento
-deste trabalho, em 15 de setembro de 2026, e a resposta transcrita na seção 5.3
-é a resposta real recebida, reproduzida sem edição de conteúdo (apenas
-formatada para caber neste documento). Não há chamada de API em tempo de
-execução: o programa em `src/missao.py` roda offline, sem chave e sem rede, e
-esta seção é um registro documental, não uma dependência do sistema.
+A análise da seção 5.3 foi produzida por um modelo de linguagem — **Claude
+(Anthropic)** — durante o desenvolvimento deste trabalho, em 15 de setembro de
+2026, a partir do prompt reproduzido na seção 5.2. O texto está transcrito sem
+edição de conteúdo, apenas formatado para caber neste documento; não é um
+exemplo hipotético nem uma resposta reescrita por nós. Não há chamada de API em
+tempo de execução: o programa em `src/missao.py` roda offline, sem chave e sem
+rede, e esta seção é um registro documental, não uma dependência do sistema.
 
 ### 5.2 Prompt enviado
 
