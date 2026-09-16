@@ -168,7 +168,14 @@ def test_relatorio_de_falha_lista_todos_os_motivos():
     assert "DECOLAGEM ABORTADA" in texto
     assert "Temperatura interna" in texto
     assert "comunicação" in texto
-    assert texto.count("- ") >= 5
+
+    # Isolar a seção "3. MOTIVOS DE ABORTO" e contar os motivos
+    partes = texto.split("3. MOTIVOS DE ABORTO")
+    assert len(partes) == 2, "Seção 3 deve existir no relatório"
+
+    secao_motivos = partes[1].split("=")[0]  # Pega até a próxima linha de "="
+    motivos = [linha for linha in secao_motivos.split("\n") if "- " in linha]
+    assert len(motivos) == 5, f"Deve haver exatamente 5 motivos, encontrou {len(motivos)}"
 
 
 def test_relatorio_mostra_cada_parametro_com_sua_faixa():
