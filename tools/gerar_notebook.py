@@ -41,8 +41,18 @@ basta executar a célula seguinte a partir do repositório."""),
     (CODE, """import sys
 from pathlib import Path
 
-# Torna src/ importável a partir da pasta do notebook.
-RAIZ = Path.cwd().parent if Path.cwd().name == "notebooks" else Path.cwd()
+# Localiza a raiz de entrega-fase1/ (quem tem src/missao.py) sem depender
+# do nome da pasta atual, para funcionar a partir da raiz do notebook, de
+# entrega-fase1/ ou da raiz do repositório.
+cwd = Path.cwd()
+candidatos = [cwd, cwd.parent, cwd / "entrega-fase1"]
+RAIZ = next((c for c in candidatos if (c / "src" / "missao.py").exists()), None)
+if RAIZ is None:
+    raise RuntimeError(
+        f"Não encontrei src/missao.py a partir de {cwd}. Rode o notebook "
+        "de dentro do repositório (raiz, entrega-fase1/ ou "
+        "entrega-fase1/notebooks/)."
+    )
 sys.path.insert(0, str(RAIZ / "src"))
 
 import missao
