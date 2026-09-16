@@ -34,3 +34,81 @@ def test_faixas_seguras_conferem_com_o_spec():
     assert missao.FAIXAS["pressao_rp1_bar"] == (190.0, 240.0)
     assert missao.ENERGIA_MINIMA_PCT == 85.0
     assert len(missao.MODULOS_CRITICOS) == 5
+
+
+def _telemetria(**alteracoes):
+    """Telemetria nominal com os campos indicados sobrescritos."""
+    dados = missao.carregar_telemetria(missao.CAMINHO_PADRAO, "nominal")
+    modulos = alteracoes.pop("modulos_criticos", None)
+    dados.update(alteracoes)
+    if modulos:
+        dados["modulos_criticos"] = {**dados["modulos_criticos"], **modulos}
+    return dados
+
+
+def test_cenario_nominal_libera_o_lancamento():
+    resultado = missao.verificar_telemetria(_telemetria())
+    assert resultado.aprovado is True
+    assert resultado.decisao == "PRONTO PARA DECOLAR"
+    assert resultado.falhas == ()
+
+
+@pytest.mark.parametrize("valor", [18.0, 28.0])
+def test_limites_da_faixa_sao_inclusivos(valor):
+    resultado = missao.verificar_telemetria(_telemetria(temperatura_interna_c=valor))
+    assert resultado.aprovado is True
+
+
+@pytest.mark.parametrize("valor", [17.9, 28.1])
+def test_temperatura_interna_fora_da_faixa_aborta(valor):
+    resultado = missao.verificar_telemetria(_telemetria(temperatura_interna_c=valor))
+    assert resultado.aprovado is False
+    assert resultado.decisao == "DECOLAGEM ABORTADA"
+    assert any("Temperatura interna" in f for f in resultado.falhas)
+
+
+@pytest.mark.parametrize("chave,valor", [
+    ("temperatura_externa_c", 50.1),
+    ("temperatura_externa_c", -40.1),
+    ("pressao_lox_bar", 199.9),
+    ("pressao_lox_bar", 250.1),
+    ("pressao_rp1_bar", 189.9),
+    ("pressao_rp1_bar", 240.1),
+])
+def test_cada_parametro_numerico_fora_da_faixa_aborta(chave, valor):
+    resultado = missao.verificar_telemetria(_telemetria(**{chave: valor}))
+    assert resultado.aprovado is False
+    assert any(missao.ROTULOS[chave] in f for f in resultado.falhas)
+
+
+def test_integridade_estrutural_comprometida_aborta():
+    resultado = missao.verificar_telemetria(_telemetria(integridade_estrutural=0))
+    assert resultado.aprovado is False
+    assert any("Integridade estrutural" in f for f in resultado.falhas)
+
+
+@pytest.mark.parametrize("valor,aprovado", [(85.0, True), (84.9, False)])
+def test_nivel_minimo_de_energia(valor, aprovado):
+    resultado = missao.verificar_telemetria(_telemetria(nivel_energia_pct=valor))
+    assert resultado.aprovado is aprovado
+
+
+def test_modulo_critico_em_falha_aborta():
+    resultado = missao.verificar_telemetria(
+        _telemetria(modulos_criticos={"propulsao": "FALHA"})
+    )
+    assert resultado.aprovado is False
+    assert any("propulsão" in f for f in resultado.falhas)
+
+
+def test_todas_as_falhas_sao_reportadas_e_nao_apenas_a_primeira():
+    dados = missao.carregar_telemetria(missao.CAMINHO_PADRAO, "falha_multipla")
+    resultado = missao.verificar_telemetria(dados)
+    assert resultado.aprovado is False
+    assert len(resultado.falhas) == 5
+    esperados = ["Temperatura interna", "Integridade estrutural",
+                 "Nível de energia", "Pressão do tanque de LOX",
+                 "comunicação", "controle térmico"]
+    texto = " | ".join(resultado.falhas)
+    for esperado in esperados:
+        assert esperado in texto

@@ -6,6 +6,7 @@ precisam. Usa apenas a biblioteca padrão do Python.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 import json
 from pathlib import Path
 
@@ -65,3 +66,62 @@ def carregar_telemetria(caminho: str | Path = CAMINHO_PADRAO,
             f"Cenário '{cenario}' inexistente. Disponíveis: {disponiveis}."
         )
     return cenarios[cenario]
+
+
+DECISAO_APROVADA = "PRONTO PARA DECOLAR"
+DECISAO_ABORTADA = "DECOLAGEM ABORTADA"
+
+
+@dataclass(frozen=True)
+class ResultadoVerificacao:
+    """Veredito do checklist pré-lançamento."""
+
+    aprovado: bool
+    decisao: str
+    falhas: tuple[str, ...]
+
+
+def verificar_telemetria(dados: dict) -> ResultadoVerificacao:
+    """Aplica todas as verificações de segurança e decide sobre o lançamento.
+
+    Avalia todos os parâmetros antes de decidir: um relatório de aborto que
+    parasse na primeira falha esconderia problemas do operador.
+    """
+    falhas: list[str] = []
+
+    for chave, (mínimo, máximo) in FAIXAS.items():
+        valor = dados[chave]
+        if not mínimo <= valor <= máximo:
+            unidade = UNIDADES[chave]
+            falhas.append(
+                f"{ROTULOS[chave]}: {valor} {unidade} fora da faixa segura "
+                f"({mínimo} a {máximo} {unidade})."
+            )
+
+    if dados["integridade_estrutural"] != 1:
+        falhas.append(
+            f"{ROTULOS['integridade_estrutural']}: comprometida "
+            f"(leitura {dados['integridade_estrutural']}, esperado 1)."
+        )
+
+    energia = dados["nivel_energia_pct"]
+    if energia < ENERGIA_MINIMA_PCT:
+        falhas.append(
+            f"{ROTULOS['nivel_energia_pct']}: {energia} % abaixo do mínimo de "
+            f"{ENERGIA_MINIMA_PCT} %."
+        )
+
+    modulos = dados["modulos_criticos"]
+    em_falha = [ROTULOS[nome] for nome in MODULOS_CRITICOS
+                if modulos.get(nome) != "OK"]
+    if em_falha:
+        falhas.append(
+            f"{ROTULOS['modulos_criticos']} em falha: {', '.join(em_falha)}."
+        )
+
+    aprovado = not falhas
+    return ResultadoVerificacao(
+        aprovado=aprovado,
+        decisao=DECISAO_APROVADA if aprovado else DECISAO_ABORTADA,
+        falhas=tuple(falhas),
+    )
