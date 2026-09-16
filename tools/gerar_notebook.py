@@ -154,7 +154,7 @@ print(f"Autonomia estimada ....... {energia.autonomia_h:>8.2f} h")
 print(f"Margem sobre a decolagem . {energia.margem_pct:>8.2f} % "
       f"(mínimo {missao.MARGEM_MINIMA_PCT:.0f} %)")
 print()
-print("Parecer energético:", "ADEQUADA" if energia.aprovado else "INSUFICIENTE")"""),
+print("Margem de segurança:", "ADEQUADA" if energia.aprovado else "INSUFICIENTE")"""),
 
     (MD, """### 4.1 Sensibilidade da autonomia ao nível de carga
 
