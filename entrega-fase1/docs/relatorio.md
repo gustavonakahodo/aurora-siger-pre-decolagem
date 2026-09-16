@@ -598,7 +598,13 @@ if __name__ == "__main__":
     import sys
 
     cenario_escolhido = sys.argv[1] if len(sys.argv) > 1 else "nominal"
-    print(executar(cenario_escolhido))
+    try:
+        print(executar(cenario_escolhido))
+    except KeyError as erro:
+        # Cenário inexistente é erro de uso, não defeito: mensagem legível
+        # em stderr e código de saída 1, sem traceback.
+        print(f"Erro: {erro.args[0]}", file=sys.stderr)
+        sys.exit(1)
 ```
 
 ### 3.2 Saída de `python src/missao.py nominal`
@@ -698,8 +704,8 @@ projeto 2: o operador recebe, de uma só vez, todos os motivos do aborto.
 
 ### 3.4 Cobertura de testes
 
-`entrega-fase1/tests/test_missao.py` traz 20 funções de teste que, com os casos
-parametrizados, resultam em **28 casos executados — todos passando**
+`entrega-fase1/tests/test_missao.py` traz 21 funções de teste que, com os casos
+parametrizados, resultam em **29 casos executados — todos passando**
 (`pytest entrega-fase1/tests/ -v`). A cobertura foi escrita em torno dos pontos
 onde um verificador de segurança costuma errar, e não em torno da contagem de
 linhas:
@@ -724,7 +730,9 @@ linhas:
   quebre a suíte em vez de passar despercebida.
 - **Formatação e linha de comando** — o relatório de texto e a execução via
   `python src/missao.py <cenario>` também são exercitados, porque são a
-  interface que o avaliador vai usar.
+  interface que o avaliador vai usar. Inclui o caso de erro de uso: um nome de
+  cenário inexistente deve produzir mensagem legível em `stderr` e código de
+  saída 1, e não um traceback.
 
 ---
 
@@ -871,6 +879,8 @@ edição de conteúdo, apenas formatado para caber neste documento; não é um
 exemplo hipotético nem uma resposta reescrita por nós. Não há chamada de API em
 tempo de execução: o programa em `src/missao.py` roda offline, sem chave e sem
 rede, e esta seção é um registro documental, não uma dependência do sistema.
+O uso de IA no trabalho como um todo, que é mais amplo do que esta seção, está
+declarado em 5.5.
 
 ### 5.2 Prompt enviado
 
@@ -1063,6 +1073,26 @@ a usamos neste trabalho — a IA não tem nenhuma participação no caminho de
 decisão do código entregue, que roda offline e produz sempre o mesmo veredito
 para a mesma telemetria.
 
+### 5.5 Escopo do uso de IA neste trabalho
+
+A análise da seção 5.3 é o uso mais visível de um modelo de linguagem aqui,
+mas não é o único, e seria desonesto deixar a impressão de que é. O
+desenvolvimento deste trabalho — o código de `src/missao.py`, a suíte de
+testes, o notebook, a documentação e o próprio texto deste relatório — foi
+feito em colaboração com um assistente de IA (Claude, da Anthropic). O
+registro disso está no repositório e é verificável: cada commit traz a linha
+`Co-Authored-By` correspondente, e os documentos de especificação e de plano
+de implementação usados no desenvolvimento estão versionados em
+`docs/superpowers/`.
+
+O que essa colaboração não transfere é responsabilidade. As decisões de
+projeto — o algoritmo conjuntivo, os limites inclusivos, a separação entre o
+parecer energético e a autorização de voo —, os valores adotados para as
+faixas e para as constantes do modelo energético, e a revisão crítica de tudo
+o que foi escrito são do autor, que responde pelo conteúdo entregue. Vale para
+a produção deste trabalho a mesma distinção que a seção 5.4 faz para o sistema:
+o assistente propõe e acelera; quem decide e assina é uma pessoa.
+
 ---
 
 ## 6. Reflexão crítica
@@ -1181,7 +1211,7 @@ conjuntivo, tem limites inclusivos, avalia todos os parâmetros antes de decidir
 — devolvendo ao operador a lista completa de motivos — e está descrito em
 fluxograma e pseudocódigo que correspondem exatamente ao código. O script roda
 apenas com a biblioteca padrão do Python, é executável por linha de comando
-para qualquer um dos três cenários e está coberto por 28 casos de teste
+para qualquer um dos três cenários e está coberto por 29 casos de teste
 automatizados, todos passando, com ênfase nos pontos de fronteira. A análise
 energética estabelece, para o cenário nominal, 101,57 kWh disponíveis, 56,57
 kWh restantes após a decolagem, 8,70 h de autonomia e margem de 125,71 % contra

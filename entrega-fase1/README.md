@@ -34,7 +34,7 @@ de lançamento, que depende apenas das leituras diretas do veículo.
 
 O que foi entregue é o algoritmo em `src/missao.py`, executável por linha de
 comando para qualquer um dos três cenários de `data/telemetria.json`; uma
-suíte de 28 testes automatizados em `tests/test_missao.py`, com ênfase nos
+suíte de 29 testes automatizados em `tests/test_missao.py`, com ênfase nos
 pontos de fronteira das faixas seguras; um notebook de análise em
 `notebooks/analise_telemetria.ipynb`; e a documentação completa em `docs/` —
 relatório técnico (Markdown e PDF), fluxograma e pseudocódigo do algoritmo.
@@ -50,7 +50,7 @@ entrega-fase1/
 ├── src/
 │   └── missao.py                 # lógica de verificação e CLI (só biblioteca padrão)
 ├── tests/
-│   └── test_missao.py            # 28 casos de teste automatizados
+│   └── test_missao.py            # 29 casos de teste automatizados
 ├── notebooks/
 │   └── analise_telemetria.ipynb  # análise executada, com outputs
 └── docs/
