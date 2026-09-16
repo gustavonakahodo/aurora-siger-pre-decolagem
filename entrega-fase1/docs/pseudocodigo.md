@@ -66,6 +66,11 @@ INÍCIO
         autonomia <- 0
     FIM SE
     margem <- (restante / CONSUMO_DECOLAGEM) * 100
+    SE margem >= MARGEM_MINIMA ENTÃO
+        parecer_energetico <- "ADEQUADA"
+    SENÃO
+        parecer_energetico <- "INSUFICIENTE"
+    FIM SE
 
     // 6. Decisão
     SE falhas ESTÁ VAZIA ENTÃO
@@ -74,7 +79,8 @@ INÍCIO
         decisao <- "DECOLAGEM ABORTADA"
     FIM SE
 
-    ESCREVER telemetria, disponivel, restante, autonomia, margem
+    ESCREVER telemetria, disponivel, restante, autonomia, margem,
+             parecer_energetico
     ESCREVER decisao
     SE falhas NÃO ESTÁ VAZIA ENTÃO
         ESCREVER cada item de falhas
