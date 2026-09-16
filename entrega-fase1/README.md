@@ -4,7 +4,7 @@
 
 | | |
 |---|---|
-| **Nome completo** | `<!-- PREENCHER -->` |
+| **Nome completo** | Gustavo Hiroshi Fernandes Nakahodo |
 | **RM** | `<!-- PREENCHER -->` |
 | **Turma** | `<!-- PREENCHER -->` |
 
