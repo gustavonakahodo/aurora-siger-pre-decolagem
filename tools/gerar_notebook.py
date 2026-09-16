@@ -57,8 +57,14 @@ sys.path.insert(0, str(RAIZ / "src"))
 
 import missao
 
-print("Módulo carregado de:", missao.__file__)
-print("Telemetria em:", missao.CAMINHO_PADRAO)"""),
+
+def caminho_relativo(caminho) -> str:
+    \"\"\"Caminho relativo à raiz do projeto, sem expor o disco local.\"\"\"
+    return f"{RAIZ.name}/{Path(caminho).resolve().relative_to(RAIZ)}"
+
+
+print("Módulo carregado de:", caminho_relativo(missao.__file__))
+print("Telemetria em:", caminho_relativo(missao.CAMINHO_PADRAO))"""),
 
     (MD, """## 1. Organização e descrição da telemetria
 
@@ -84,8 +90,9 @@ print(f"{'Integridade estrutural':<28} {dados['integridade_estrutural']:>12}  "
 valor_energia = f"{dados['nivel_energia_pct']} %"
 situacao_energia = ("OK" if dados['nivel_energia_pct'] >= missao.ENERGIA_MINIMA_PCT
                      else "INSUFICIENTE")
+faixa_energia = f">= {missao.ENERGIA_MINIMA_PCT} %"
 print(f"{'Nível de energia':<28} {valor_energia:>12}  "
-      f"{'>= 85.0 %':<22} {situacao_energia}")
+      f"{faixa_energia:<22} {situacao_energia}")
 
 print()
 print("Módulos críticos:")
@@ -147,47 +154,80 @@ print(f"Autonomia estimada ....... {energia.autonomia_h:>8.2f} h")
 print(f"Margem sobre a decolagem . {energia.margem_pct:>8.2f} % "
       f"(mínimo {missao.MARGEM_MINIMA_PCT:.0f} %)")
 print()
-print("Parecer energético:", "ADEQUADO" if energia.aprovado else "INSUFICIENTE")"""),
+print("Parecer energético:", "ADEQUADA" if energia.aprovado else "INSUFICIENTE")"""),
 
     (MD, """### 4.1 Sensibilidade da autonomia ao nível de carga
 
-Qual é a carga mínima que ainda permite decolar com a margem de 20 %?"""),
+Qual é a carga mínima que ainda permite decolar com a margem de 20 %? A varredura
+começa em 40 % justamente para que o ponto de corte apareça na tabela: ele fica
+entre a linha de 45 % (reprovada) e a de 50 % (aprovada), em 48,913 % de carga —
+o valor exato está deduzido em
+[`docs/relatorio.md` §4.3](../docs/relatorio.md#43-sensibilidade-ao-estado-de-carga)."""),
 
     (CODE, """print(f"{'Carga (%)':>10} {'Disponível (kWh)':>18} {'Autonomia (h)':>15} "
       f"{'Margem (%)':>12}  Parecer")
 print("-" * 70)
-for carga in range(50, 101, 5):
+for carga in range(40, 101, 5):
     e = missao.analisar_energia(float(carga))
-    parecer = "adequado" if e.aprovado else "insuficiente"
+    parecer = "ADEQUADA" if e.aprovado else "INSUFICIENTE"
     print(f"{carga:>10} {e.disponivel_kwh:>18.2f} {e.autonomia_h:>15.2f} "
           f"{e.margem_pct:>12.2f}  {parecer}")"""),
 
     (MD, """## 5. Análise assistida por IA
 
 A telemetria e as faixas seguras foram submetidas a um modelo de linguagem
-(Claude), com o prompt reproduzido abaixo. A resposta e o comentário crítico
-sobre ela estão no relatório, em
-[`docs/relatorio.md`](../docs/relatorio.md#5-análise-assistida-por-ia).
+(Claude, da Anthropic). O prompt exato, a resposta transcrita e o comentário
+crítico sobre ela estão no relatório — o prompt em
+[`docs/relatorio.md` §5.2](../docs/relatorio.md#52-prompt-enviado), a resposta
+e a crítica nas seções 5.3 e 5.4. O texto não é reproduzido aqui de propósito:
+o relatório é a única versão dele, e duas cópias acabariam divergindo.
 
-> **Prompt enviado:**
-> "Você é um engenheiro de sistemas de lançamento. A seguir está a telemetria
-> de um foguete na janela T-10 min e as faixas seguras adotadas pela equipe.
-> (1) Classifique cada parâmetro como nominal, de atenção ou crítico.
-> (2) Identifique possíveis anomalias, inclusive correlações entre parâmetros
-> que isoladamente pareceriam aceitáveis. (3) Liste os riscos de missão que
-> essas leituras sugerem, do mais provável ao menos provável. Seja explícito
-> sobre o que não é possível concluir apenas com esses dados."
+**Síntese para quem lê só o notebook.** O que se pediu ao modelo foi
+classificar cada parâmetro de dois cenários, apontar correlações entre
+parâmetros e ordenar os riscos por gravidade. O que ele agregou é exatamente o
+que o checklist determinístico não produz: causalidade — a temperatura interna
+alta lida como sintoma da falha do controle térmico, e não como um item
+independente da lista —, hierarquia entre motivos de aborto que o algoritmo
+devolve achatados, e riscos de segunda ordem, como a perda de comunicação
+eliminar a terminação de voo. Onde não se pode confiar nele: a resposta não é
+reprodutível — mesmo prompt, mesma telemetria, outra resposta amanhã —, não é
+auditável até o requisito de engenharia que fixou cada limite, e afirma com o
+mesmo tom seguro o que é quase certo e o que é apenas plausível. Por isso a
+autorização de voo continua com o algoritmo determinístico, e o papel da IA é
+gerar hipóteses *depois* do aborto.
 
-A resposta do modelo foi avaliada criticamente — não aceita como veredito.
-O ponto principal: a IA levanta hipóteses úteis sobre *correlações* que o
-checklist determinístico não captura, mas não pode substituir o checklist,
-porque não tem garantia de reprodutibilidade nem rastreabilidade de decisão."""),
+O escopo do uso de IA no trabalho como um todo está declarado em
+[§5.5](../docs/relatorio.md#55-escopo-do-uso-de-ia-neste-trabalho)."""),
 
     (MD, """## 6. Reflexão crítica
 
 O texto completo sobre ética e responsabilidade, impacto social da exploração
 espacial e sustentabilidade tecnológica está em
-[`docs/relatorio.md`](../docs/relatorio.md#6-reflexão-crítica)."""),
+[`docs/relatorio.md`](../docs/relatorio.md#6-reflexão-crítica). Uma tese por
+subseção, para quem lê só o notebook:
+
+**6.1 — Ética e responsabilidade.** Os dois erros possíveis de um verificador
+não são simétricos: um aborto indevido custa dinheiro e janela de lançamento,
+um lançamento indevido pode custar vidas — daí o algoritmo conjuntivo e
+conservador. Mas a responsabilidade nunca é do programa: quem decide é quem
+fixa o limite, e por isso cada faixa tem a origem registrada. O risco que
+sobra é o viés de automação, que o software só mitiga em parte, imprimindo
+sempre todos os parâmetros em vez de um sinal único.
+
+**6.2 — Impacto social.** O retorno tecnológico dos programas espaciais é
+real, mas não encerra a discussão: a pergunta relevante não é se há retorno, e
+sim quem o recebe. O acesso à órbita é concentrado, faixas orbitais e espectro
+são recursos finitos alocados por ocupação, o lixo orbital é uma externalidade
+paga por quem vier depois, e a tecnologia de lançamento é de uso dual por
+natureza — nada disso é neutro.
+
+**6.3 — Sustentabilidade.** A combustão de LOX/RP-1 emite dióxido de carbono e
+fuligem diretamente na estratosfera, onde o efeito é desproporcional ao
+volume; o número de lançamentos ainda é pequeno, a trajetória não é. O
+reaproveitamento de estágios é o ganho estrutural mais relevante e é material
+antes de ser energético, mas depende de quantas vezes o mesmo estágio voa de
+fato. Vale aqui a ressalva que fazemos ao nosso próprio modelo energético: um
+número favorável só significa o que suas premissas permitem."""),
 
     (MD, """## 7. Testes automatizados
 
