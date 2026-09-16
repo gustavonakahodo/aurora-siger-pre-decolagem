@@ -153,3 +153,37 @@ def test_energia_insuficiente_para_decolar_zera_autonomia():
     assert resultado.restante_kwh == pytest.approx(-35.0)
     assert resultado.autonomia_h == 0.0
     assert resultado.aprovado is False
+
+
+def test_relatorio_nominal_mostra_decisao_e_autonomia():
+    texto = missao.executar("nominal")
+    assert "PRONTO PARA DECOLAR" in texto
+    assert "Aurora-1" in texto
+    assert "8.70 h" in texto
+    assert "Nenhuma" in texto
+
+
+def test_relatorio_de_falha_lista_todos_os_motivos():
+    texto = missao.executar("falha_multipla")
+    assert "DECOLAGEM ABORTADA" in texto
+    assert "Temperatura interna" in texto
+    assert "comunicação" in texto
+    assert texto.count("- ") >= 5
+
+
+def test_relatorio_mostra_cada_parametro_com_sua_faixa():
+    texto = missao.executar("nominal")
+    assert "23.4" in texto
+    assert "18.0 a 28.0" in texto
+    assert "OK" in texto
+
+
+def test_execucao_por_linha_de_comando():
+    import subprocess
+    import sys as _sys
+    caminho = Path(missao.__file__)
+    saida = subprocess.run(
+        [_sys.executable, str(caminho), "falha_termica"],
+        capture_output=True, text=True, check=True,
+    )
+    assert "DECOLAGEM ABORTADA" in saida.stdout

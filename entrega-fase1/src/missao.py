@@ -169,3 +169,95 @@ def analisar_energia(
         margem_pct=margem,
         aprovado=margem >= MARGEM_MINIMA_PCT,
     )
+
+
+def _linha_parametro(chave: str, valor, faixa: str, situacao: str) -> str:
+    return f"  {ROTULOS[chave]:<28} {str(valor):>10}  {faixa:<20} {situacao}"
+
+
+def formatar_relatorio(dados: dict, verificacao: ResultadoVerificacao,
+                       energia: ResultadoEnergia, cenario: str) -> str:
+    """Monta o relatório de pré-lançamento em texto puro."""
+    linhas: list[str] = []
+    linhas.append("=" * 78)
+    linhas.append("RELATÓRIO DE PRÉ-LANÇAMENTO — MISSÃO Aurora-1")
+    linhas.append(f"Cenário de telemetria: {cenario}")
+    linhas.append("=" * 78)
+    linhas.append("")
+    linhas.append("1. TELEMETRIA")
+    linhas.append(
+        f"  {'Parâmetro':<28} {'Leitura':>10}  {'Faixa segura':<20} Situação"
+    )
+    linhas.append("  " + "-" * 74)
+
+    for chave, (mínimo, máximo) in FAIXAS.items():
+        valor = dados[chave]
+        unidade = UNIDADES[chave]
+        dentro = mínimo <= valor <= máximo
+        linhas.append(_linha_parametro(
+            chave, f"{valor} {unidade}", f"{mínimo} a {máximo} {unidade}",
+            "OK" if dentro else "FORA DA FAIXA",
+        ))
+
+    integridade = dados["integridade_estrutural"]
+    linhas.append(_linha_parametro(
+        "integridade_estrutural", integridade, "= 1",
+        "OK" if integridade == 1 else "COMPROMETIDA",
+    ))
+
+    energia_pct = dados["nivel_energia_pct"]
+    linhas.append(_linha_parametro(
+        "nivel_energia_pct", f"{energia_pct} %", f">= {ENERGIA_MINIMA_PCT} %",
+        "OK" if energia_pct >= ENERGIA_MINIMA_PCT else "INSUFICIENTE",
+    ))
+
+    linhas.append("")
+    linhas.append("  Módulos críticos:")
+    for nome in MODULOS_CRITICOS:
+        estado = dados["modulos_criticos"].get(nome, "DESCONHECIDO")
+        linhas.append(f"    - {ROTULOS[nome]:<22} {estado}")
+
+    linhas.append("")
+    linhas.append("2. ANÁLISE ENERGÉTICA")
+    linhas.append(f"  Capacidade total .................. {CAPACIDADE_TOTAL_KWH:.2f} kWh")
+    linhas.append(f"  Carga atual ....................... {energia_pct:.2f} %")
+    linhas.append(f"  Perdas energéticas ................ {PERDAS_PCT:.2f} %")
+    linhas.append(f"  Energia disponível ................ {energia.disponivel_kwh:.2f} kWh")
+    linhas.append(f"  Consumo na decolagem .............. {CONSUMO_DECOLAGEM_KWH:.2f} kWh")
+    linhas.append(f"  Energia restante .................. {energia.restante_kwh:.2f} kWh")
+    linhas.append(f"  Consumo em voo .................... {CONSUMO_VOO_KW:.2f} kW")
+    linhas.append(f"  Autonomia estimada ................ {energia.autonomia_h:.2f} h")
+    linhas.append(
+        f"  Margem sobre a decolagem .......... {energia.margem_pct:.2f} % "
+        f"(mínimo {MARGEM_MINIMA_PCT:.0f} %) — "
+        f"{'ADEQUADA' if energia.aprovado else 'INSUFICIENTE'}"
+    )
+
+    linhas.append("")
+    linhas.append("3. MOTIVOS DE ABORTO")
+    if verificacao.falhas:
+        linhas.extend(f"  - {falha}" for falha in verificacao.falhas)
+    else:
+        linhas.append("  Nenhuma inconformidade encontrada.")
+
+    linhas.append("")
+    linhas.append("=" * 78)
+    linhas.append(f"DECISÃO: {verificacao.decisao}")
+    linhas.append("=" * 78)
+    return "\n".join(linhas)
+
+
+def executar(cenario: str = "nominal",
+             caminho: str | Path = CAMINHO_PADRAO) -> str:
+    """Executa o fluxo completo e devolve o relatório de pré-lançamento."""
+    dados = carregar_telemetria(caminho, cenario)
+    verificacao = verificar_telemetria(dados)
+    energia = analisar_energia(dados["nivel_energia_pct"])
+    return formatar_relatorio(dados, verificacao, energia, cenario)
+
+
+if __name__ == "__main__":
+    import sys
+
+    cenario_escolhido = sys.argv[1] if len(sys.argv) > 1 else "nominal"
+    print(executar(cenario_escolhido))
