@@ -78,6 +78,18 @@ python src/missao.py falha_termica    # aborto por temperatura
 python src/missao.py falha_multipla   # aborto com cinco motivos
 ```
 
+### Ambiente virtual (para testes e notebook)
+
+O script principal não precisa disso — só os testes e o notebook, que
+dependem de pacotes externos. Para não instalar nada no Python do sistema,
+crie e ative um ambiente virtual antes dos `pip install` das duas seções
+abaixo:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
+```
+
 ### Abrir o notebook
 
 ```bash
