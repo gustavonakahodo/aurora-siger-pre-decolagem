@@ -1,0 +1,4 @@
+# O código de src/ usa apenas a biblioteca padrão do Python (>= 3.10).
+# As dependências abaixo servem apenas para rodar os testes e o notebook.
+pytest>=8.0
+jupyter>=1.0

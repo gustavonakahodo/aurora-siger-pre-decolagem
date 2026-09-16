@@ -1,0 +1,52 @@
+{
+  "missao": "Aurora-1",
+  "veiculo": "Lançador de carga, propelentes LOX/RP-1",
+  "janela": "T-10min",
+  "cenarios": {
+    "nominal": {
+      "temperatura_interna_c": 23.4,
+      "temperatura_externa_c": 12.8,
+      "integridade_estrutural": 1,
+      "nivel_energia_pct": 92.0,
+      "pressao_lox_bar": 228.0,
+      "pressao_rp1_bar": 214.0,
+      "modulos_criticos": {
+        "navegacao": "OK",
+        "comunicacao": "OK",
+        "propulsao": "OK",
+        "controle_termico": "OK",
+        "suporte_vida": "OK"
+      }
+    },
+    "falha_termica": {
+      "temperatura_interna_c": 31.2,
+      "temperatura_externa_c": 12.8,
+      "integridade_estrutural": 1,
+      "nivel_energia_pct": 92.0,
+      "pressao_lox_bar": 228.0,
+      "pressao_rp1_bar": 214.0,
+      "modulos_criticos": {
+        "navegacao": "OK",
+        "comunicacao": "OK",
+        "propulsao": "OK",
+        "controle_termico": "OK",
+        "suporte_vida": "OK"
+      }
+    },
+    "falha_multipla": {
+      "temperatura_interna_c": 34.5,
+      "temperatura_externa_c": 12.8,
+      "integridade_estrutural": 0,
+      "nivel_energia_pct": 78.0,
+      "pressao_lox_bar": 188.0,
+      "pressao_rp1_bar": 214.0,
+      "modulos_criticos": {
+        "navegacao": "OK",
+        "comunicacao": "FALHA",
+        "propulsao": "OK",
+        "controle_termico": "FALHA",
+        "suporte_vida": "OK"
+      }
+    }
+  }
+}
