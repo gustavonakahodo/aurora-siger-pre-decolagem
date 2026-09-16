@@ -260,4 +260,10 @@ if __name__ == "__main__":
     import sys
 
     cenario_escolhido = sys.argv[1] if len(sys.argv) > 1 else "nominal"
-    print(executar(cenario_escolhido))
+    try:
+        print(executar(cenario_escolhido))
+    except KeyError as erro:
+        # Cenário inexistente é erro de uso, não defeito: mensagem legível
+        # em stderr e código de saída 1, sem traceback.
+        print(f"Erro: {erro.args[0]}", file=sys.stderr)
+        sys.exit(1)

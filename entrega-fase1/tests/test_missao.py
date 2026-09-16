@@ -194,3 +194,17 @@ def test_execucao_por_linha_de_comando():
         capture_output=True, text=True, check=True,
     )
     assert "DECOLAGEM ABORTADA" in saida.stdout
+
+
+def test_cenario_inexistente_na_linha_de_comando_falha_sem_traceback():
+    import subprocess
+    import sys as _sys
+    caminho = Path(missao.__file__)
+    saida = subprocess.run(
+        [_sys.executable, str(caminho), "inexistente"],
+        capture_output=True, text=True,
+    )
+    assert saida.returncode == 1
+    assert "Traceback" not in saida.stderr
+    assert "Cenário 'inexistente' inexistente" in saida.stderr
+    assert "falha_multipla" in saida.stderr  # lista os cenários disponíveis
