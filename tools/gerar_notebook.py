@@ -35,8 +35,8 @@ Se estiver no Google Colab, descomente e rode a célula de clone. Localmente,
 basta executar a célula seguinte a partir do repositório."""),
 
     (CODE, """# No Google Colab, descomente as duas linhas abaixo:
-# !git clone https://github.com/SEU_USUARIO/SEU_REPOSITORIO.git
-# %cd SEU_REPOSITORIO/entrega-fase1/notebooks"""),
+# !git clone https://github.com/gustavonakahodo/aurora-siger-pre-decolagem.git
+# %cd aurora-siger-pre-decolagem/entrega-fase1/notebooks"""),
 
     (CODE, """import sys
 from pathlib import Path

@@ -101,9 +101,8 @@ Para rodar no Google Colab, faça upload do notebook (ou abra-o direto do
 repositório) e descomente a célula inicial que clona o repositório — ela
 existe justamente para que o notebook encontre `src/missao.py` e
 `data/telemetria.json` num ambiente que não tem o restante do projeto no
-disco. Ao descomentar, substitua também `SEU_USUARIO` e `SEU_REPOSITORIO`
-pelos valores reais do repositório, nas duas linhas (a do `git clone` e a do
-`%cd`) — os nomes na célula são placeholders, não valores prontos para uso.
+disco. A célula já aponta para o repositório
+deste trabalho, então basta descomentar as duas linhas e executar.
 
 ### Rodar os testes
 

@@ -8,7 +8,7 @@
 | **RM** | 576337 |
 | **Turma** | Ciência da Computação (On-Line) |
 | **Data** | 15 de setembro de 2026 |
-| **Repositório** | `<!-- PREENCHER -->` |
+| **Repositório** | <https://github.com/gustavonakahodo/aurora-siger-pre-decolagem> |
 
 ---
 
