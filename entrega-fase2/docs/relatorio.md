@@ -90,8 +90,9 @@ primeiro a prioridade menos importante (3), depois a 2, e dentro de cada uma
 começa pelo maior consumo. Ela para assim que o consumo cabe na geração. Na
 regra 1 o corte não depende do déficit: sai tudo que não é essencial, para a
 reserva se recuperar o mais rápido possível. A prioridade 1
-(oxigênio, água, controle térmico e comunicação) nunca entra na lista — há um
-teste automatizado que verifica isso para 28 combinações de reserva e geração.
+(oxigênio, água, controle térmico e comunicação) nunca entra na lista — há
+testes automatizados que verificam isso em milhares de combinações sorteadas
+de reserva, geração e equipamentos.
 
 **Exemplo (cenário `economia`).** Entrada: reserva = 40 %, consumo = 70 kW,
 geração = 40 kW. A regra 2 dispara. O sistema desliga Laboratório (12) e
@@ -183,5 +184,5 @@ Código, dados, testes e este relatório estão em:
 `entrega-fase2/`
 
 Para executar: `cd entrega-fase2 && python src/colonia.py economia`. O
-`README.md` da pasta traz a saída completa do programa e as instruções dos 88
+`README.md` da pasta traz a saída completa do programa e as instruções dos 101
 testes automatizados.
