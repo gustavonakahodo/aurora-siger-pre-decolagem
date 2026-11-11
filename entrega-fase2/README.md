@@ -69,7 +69,7 @@ entrega-fase2/
 │   ├── previsao.py         # LÓGICA: regressão linear
 │   ├── decisoes.py         # DECISÕES: regras e prioridades
 │   └── colonia.py          # integração, relatório e linha de comando
-├── tests/                  # 88 testes automatizados (um arquivo por módulo)
+├── tests/                  # 101 testes automatizados
 └── docs/
     ├── relatorio.md        # relatório da entrega
     └── relatorio.pdf       # o mesmo relatório, em PDF
@@ -94,6 +94,11 @@ Para rodar os testes:
 pip install pytest
 pytest tests/ -v
 ```
+
+São 101 testes. Além dos casos escolhidos a dedo (os exemplos do enunciado e
+as fronteiras de cada limite), `tests/test_propriedades.py` sorteia milhares
+de entradas e verifica o que tem de valer sempre — por exemplo, que nenhuma
+decisão desliga um sistema essencial e que a reta ajustada é a de menor erro.
 
 ## Exemplo de entrada e saída
 
