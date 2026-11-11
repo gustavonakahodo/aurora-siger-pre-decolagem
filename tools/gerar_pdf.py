@@ -1,18 +1,20 @@
 """Converte o relatório Markdown em PDF usando o Chrome em modo headless.
 
 Não faz parte da entrega: é ferramenta de build. Rodar da raiz do projeto:
-    .venv/bin/python tools/gerar_pdf.py
+    .venv/bin/python tools/gerar_pdf.py [pasta-da-entrega]
+
+A pasta padrão é entrega-fase1.
 """
 
+import html as html_lib
 import subprocess
+import sys
 import tempfile
 from pathlib import Path
 
 import markdown
 
 RAIZ = Path(__file__).resolve().parents[1]
-ORIGEM = RAIZ / "entrega-fase1" / "docs" / "relatorio.md"
-DESTINO = RAIZ / "entrega-fase1" / "docs" / "relatorio.pdf"
 CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 
 ESTILO = """
@@ -39,7 +41,13 @@ img { display: block; margin: 14px auto; max-width: 100%; max-height: 235mm;
 
 
 def main() -> None:
+    entrega = sys.argv[1] if len(sys.argv) > 1 else "entrega-fase1"
+    ORIGEM = RAIZ / entrega / "docs" / "relatorio.md"
+    DESTINO = RAIZ / entrega / "docs" / "relatorio.pdf"
     texto = ORIGEM.read_text(encoding="utf-8")
+    # O título do PDF é o primeiro cabeçalho do Markdown.
+    titulo = next((linha[2:].strip() for linha in texto.splitlines()
+                   if linha.startswith("# ")), "Relatório")
     corpo = markdown.markdown(
         texto, extensions=["tables", "fenced_code", "toc", "sane_lists"]
     )
@@ -48,7 +56,7 @@ def main() -> None:
     base = ORIGEM.parent.as_uri() + "/"
     html = (f"<!doctype html><html lang='pt-BR'><head><meta charset='utf-8'>"
             f"<base href='{base}'>"
-            f"<title>Relatório Aurora-1</title><style>{ESTILO}</style></head>"
+            f"<title>{html_lib.escape(titulo)}</title><style>{ESTILO}</style></head>"
             f"<body>{corpo}</body></html>")
 
     with tempfile.TemporaryDirectory() as tmp:

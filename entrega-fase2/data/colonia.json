@@ -1,0 +1,100 @@
+{
+  "colonia": "Aurora Siger",
+  "janela_previsao_h": 6,
+  "sistemas": {
+    "rotulo": "Colônia",
+    "subsistemas": {
+      "energia": {
+        "rotulo": "Sistema energético",
+        "subsistemas": {
+          "geracao": {
+            "rotulo": "Geração",
+            "subsistemas": {
+              "solar": {"rotulo": "Solar"},
+              "eolico": {"rotulo": "Eólico"}
+            }
+          },
+          "armazenamento": {
+            "rotulo": "Armazenamento",
+            "subsistemas": {
+              "baterias": {"rotulo": "Baterias", "capacidade_kwh": 400.0}
+            }
+          }
+        }
+      },
+      "suporte_vida": {
+        "rotulo": "Suporte à vida",
+        "subsistemas": {
+          "oxigenio": {"rotulo": "Oxigênio", "consumo_kw": 12.0, "prioridade": 1},
+          "agua": {"rotulo": "Água", "consumo_kw": 8.0, "prioridade": 1},
+          "controle_termico": {"rotulo": "Controle térmico", "consumo_kw": 10.0, "prioridade": 1}
+        }
+      },
+      "habitat": {
+        "rotulo": "Habitat",
+        "subsistemas": {
+          "comunicacao": {"rotulo": "Comunicação", "consumo_kw": 4.0, "prioridade": 1},
+          "iluminacao": {"rotulo": "Iluminação", "consumo_kw": 6.0, "prioridade": 2},
+          "estufa": {"rotulo": "Estufa", "consumo_kw": 10.0, "prioridade": 2},
+          "laboratorio": {"rotulo": "Laboratório", "consumo_kw": 12.0, "prioridade": 3},
+          "lazer": {"rotulo": "Lazer", "consumo_kw": 8.0, "prioridade": 3}
+        }
+      }
+    }
+  },
+  "historico": {
+    "vento_ms": [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+    "energia_eolica_kw": [10.2, 12.1, 15.3, 17.4, 20.1, 22.8, 24.7, 27.9, 30.2, 32.1, 35.4, 37.3],
+    "irradiancia_wm2": [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000],
+    "energia_solar_kw": [6.3, 11.8, 18.4, 23.7, 30.5, 35.6, 42.3, 47.8, 54.4, 59.7]
+  },
+  "cenarios": {
+    "nominal": {
+      "descricao": "Dia claro e com vento: geração acima do consumo.",
+      "reserva_pct": 78.0,
+      "geracao_solar_kw": 48.0,
+      "geracao_eolica_kw": 35.0,
+      "previsao_clima": {"vento_ms": 12, "irradiancia_wm2": 750},
+      "ligados": [
+        "suporte_vida/oxigenio", "suporte_vida/agua", "suporte_vida/controle_termico",
+        "habitat/comunicacao", "habitat/iluminacao", "habitat/estufa",
+        "habitat/laboratorio", "habitat/lazer"
+      ]
+    },
+    "economia": {
+      "descricao": "Reserva baixa e consumo alto: o exemplo do enunciado (energia 40, consumo 70).",
+      "reserva_pct": 40.0,
+      "geracao_solar_kw": 21.0,
+      "geracao_eolica_kw": 19.0,
+      "previsao_clima": {"vento_ms": 6, "irradiancia_wm2": 200},
+      "ligados": [
+        "suporte_vida/oxigenio", "suporte_vida/agua", "suporte_vida/controle_termico",
+        "habitat/comunicacao", "habitat/iluminacao", "habitat/estufa",
+        "habitat/laboratorio", "habitat/lazer"
+      ]
+    },
+    "critico": {
+      "descricao": "Reserva quase esgotada: só o essencial pode ficar ligado.",
+      "reserva_pct": 15.0,
+      "geracao_solar_kw": 6.0,
+      "geracao_eolica_kw": 10.0,
+      "previsao_clima": {"vento_ms": 9, "irradiancia_wm2": 500},
+      "ligados": [
+        "suporte_vida/oxigenio", "suporte_vida/agua", "suporte_vida/controle_termico",
+        "habitat/comunicacao", "habitat/iluminacao", "habitat/estufa"
+      ]
+    },
+    "preventivo": {
+      "descricao": "Tudo bem agora, mas a previsão indica queda de vento e de sol.",
+      "reserva_pct": 65.0,
+      "geracao_solar_kw": 42.0,
+      "geracao_eolica_kw": 33.0,
+      "previsao_clima": {"vento_ms": 5, "irradiancia_wm2": 300},
+      "ligados": [
+        "suporte_vida/oxigenio", "suporte_vida/agua", "suporte_vida/controle_termico",
+        "habitat/comunicacao", "habitat/iluminacao", "habitat/estufa",
+        "habitat/laboratorio", "habitat/lazer"
+      ]
+    }
+  }
+}
