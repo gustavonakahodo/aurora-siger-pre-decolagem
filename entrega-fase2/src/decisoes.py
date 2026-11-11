@@ -13,8 +13,10 @@ from dataclasses import dataclass
 RESERVA_BAIXA_PCT = 50.0
 RESERVA_CRITICA_PCT = 20.0
 CONSUMO_ALTO_KW = 60.0
+MARGEM_ESTAVEL_PCT = 1.0   # variação de reserva tratada como "estável"
 
 PRIORIDADE_ESSENCIAL = 1
+PRIORIDADE_IMPORTANTE = 2
 
 NORMAL, ATENCAO, ALERTA, CRITICO = "NORMAL", "ATENÇÃO", "ALERTA", "CRÍTICO"
 GRAVIDADE = {NORMAL: 0, ATENCAO: 1, ALERTA: 2, CRITICO: 3}
@@ -38,13 +40,17 @@ class Decisao:
 
 
 def planejar_cortes(consumidores: list[dict], reducao_kw: float,
-                    prioridades: tuple[int, ...] = (3, 2)) -> list[dict]:
+                    prioridades: tuple[int, ...] | None = None) -> list[dict]:
     """Escolhe o que desligar para reduzir o consumo em `reducao_kw`.
 
-    Percorre as prioridades na ordem dada (menos importante primeiro) e,
-    dentro de cada uma, do maior consumo para o menor. Para assim que a
-    redução é atingida. Equipamentos essenciais nunca entram na lista.
+    Percorre as prioridades da menos importante (número maior) para a mais
+    importante e, dentro de cada uma, do maior consumo para o menor. Para
+    assim que a redução é atingida. Equipamentos essenciais nunca entram na
+    lista. `prioridades` restringe o corte a alguns níveis.
     """
+    if prioridades is None:
+        prioridades = tuple(sorted({c["prioridade"] for c in consumidores},
+                                   reverse=True))
     cortes: list[dict] = []
     cortado = 0.0
     for prioridade in prioridades:
@@ -80,12 +86,16 @@ def decidir(reserva_pct: float, consumo_kw: float, geracao_kw: float,
         regras.append(f"reserva {reserva_pct:.1f} % < {RESERVA_BAIXA_PCT:.0f} % E "
                       f"consumo {consumo_kw:.1f} kW > {CONSUMO_ALTO_KW:.0f} kW"
                       " → modo economia")
-        # Modo economia: sai tudo que é prioridade 3; se ainda faltar
-        # energia, a prioridade 2 cobre o que resta do déficit.
-        cortes = planejar_cortes(consumidores, float("inf"), prioridades=(3,))
+        # Modo economia: sai tudo que é dispensável (prioridade 3 em
+        # diante); se ainda faltar energia, a prioridade 2 cobre o resto.
+        dispensaveis = tuple(sorted(
+            {c["prioridade"] for c in consumidores
+             if c["prioridade"] > PRIORIDADE_IMPORTANTE}, reverse=True))
+        cortes = planejar_cortes(consumidores, float("inf"), dispensaveis)
         falta = deficit - sum(c["consumo_kw"] for c in cortes)
         if falta > 0:
-            cortes += planejar_cortes(consumidores, falta, prioridades=(2,))
+            cortes += planejar_cortes(consumidores, falta,
+                                      (PRIORIDADE_IMPORTANTE,))
     elif reserva_pct < RESERVA_BAIXA_PCT:
         nivel, acao = ALERTA, ACAO_ALERTA
         regras.append(f"reserva {reserva_pct:.1f} % < {RESERVA_BAIXA_PCT:.0f} %"
@@ -100,16 +110,28 @@ def decidir(reserva_pct: float, consumo_kw: float, geracao_kw: float,
         regras.append("nenhuma condição de risco")
 
     consumo_apos = consumo_kw - sum(c["consumo_kw"] for c in cortes)
-    if cortes and consumo_apos > geracao_kw:
-        regras.append("mesmo após os cortes o consumo supera a geração:"
-                      " os essenciais seguem ligados, alimentados pela reserva")
+    em_economia = nivel in (ALERTA, CRITICO)
+    if em_economia and consumo_apos > geracao_kw:
+        regras.append("mesmo com os cortes possíveis o consumo supera a"
+                      " geração: o que ficou ligado é alimentado pela reserva")
+    elif em_economia and not cortes:
+        regras.append("sem déficit, nada a desligar agora: não ligar novas"
+                      " cargas até a reserva se recuperar")
     return Decisao(nivel, acao, tuple(regras),
                    tuple(c["rotulo"] for c in cortes), consumo_apos)
 
 
-def comparar(atual: Decisao, prevista: Decisao) -> str:
-    """Diz se a situação prevista é pior, igual ou melhor que a atual."""
+def comparar(atual: Decisao, prevista: Decisao,
+             reserva_atual_pct: float, reserva_prevista_pct: float) -> str:
+    """Diz se a situação prevista é pior, igual ou melhor que a atual.
+
+    Vale primeiro o nível da decisão; se o nível é o mesmo, desempata o
+    rumo da reserva (uma reserva caindo é piora, mesmo sem mudar de nível).
+    """
     diferenca = GRAVIDADE[prevista.nivel] - GRAVIDADE[atual.nivel]
+    if diferenca == 0:
+        variacao = reserva_prevista_pct - reserva_atual_pct
+        diferenca = 0 if abs(variacao) < MARGEM_ESTAVEL_PCT else -variacao
     if diferenca > 0:
         return "PIORA"
     if diferenca < 0:

@@ -65,3 +65,18 @@ def test_historico_da_colonia_e_bem_explicado_por_uma_reta():
         a, b = previsao.ajustar_reta(xs, ys)
         assert a > 0
         assert previsao.r2(xs, ys, a, b) > 0.99
+
+
+def test_fora_da_faixa_do_historico():
+    xs = [4, 8, 15]
+    assert not previsao.fora_da_faixa(xs, 4)
+    assert not previsao.fora_da_faixa(xs, 15)
+    assert not previsao.fora_da_faixa(xs, 9.5)
+    assert previsao.fora_da_faixa(xs, 3.9)
+    assert previsao.fora_da_faixa(xs, 15.1)
+
+
+def test_reta_do_historico_preve_27_5_para_vento_11():
+    historico = dados.carregar_colonia()["historico"]
+    a, b = previsao.ajustar_reta(historico["vento_ms"], historico["energia_eolica_kw"])
+    assert previsao.prever(a, b, 11) == pytest.approx(27.5, abs=0.05)

@@ -27,7 +27,27 @@ def carregar_cenario(colonia: dict, nome: str) -> dict:
         raise KeyError(
             f"Cenário '{nome}' inexistente. Disponíveis: {disponiveis}."
         )
+    validar_cenario(nome, cenarios[nome])
     return cenarios[nome]
+
+
+def validar_cenario(nome: str, cenario: dict) -> None:
+    """Recusa leituras impossíveis antes que virem uma decisão errada."""
+    if not 0 <= cenario["reserva_pct"] <= 100:
+        raise ValueError(f"Cenário '{nome}': a reserva deve estar entre 0 e 100 %.")
+    clima = cenario["previsao_clima"]
+    medidas = {
+        "geração solar": cenario["geracao_solar_kw"],
+        "geração eólica": cenario["geracao_eolica_kw"],
+        "vento previsto": clima["vento_ms"],
+        "irradiância prevista": clima["irradiancia_wm2"],
+    }
+    for rotulo, valor in medidas.items():
+        if valor < 0:
+            raise ValueError(f"Cenário '{nome}': {rotulo} não pode ser negativa.")
+    ligados = cenario["ligados"]
+    if len(set(ligados)) != len(ligados):
+        raise ValueError(f"Cenário '{nome}': há subsistema repetido em 'ligados'.")
 
 
 def buscar_subsistema(arvore: dict, caminho: str) -> dict:

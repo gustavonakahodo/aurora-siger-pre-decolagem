@@ -63,6 +63,10 @@ o elo entre estrutura e decisão: **o consumo da colônia não é um número
 digitado, é a soma dos equipamentos ligados**. Com os oito ligados, o total é
 70 kW; a mesma função aplicada só ao ramo "Suporte à vida" devolve 30 kW.
 
+Antes de usar um cenário, o sistema o valida: reserva fora de 0–100 %,
+geração negativa ou equipamento repetido na lista de ligados são recusados
+com uma mensagem clara, em vez de virarem uma decisão errada.
+
 ## 2. Regras de decisão
 
 As regras ficam em `src/decisoes.py`. Elas olham três números — reserva,
@@ -82,8 +86,10 @@ condições com **E**. A ordem importa: como a regra 2 é mais específica, ela
 vem antes da 3.
 
 **Prioridade.** Quando é preciso cortar, a função `planejar_cortes` desliga
-primeiro a prioridade 3, depois a 2, e dentro de cada uma começa pelo maior
-consumo. Ela para assim que o consumo cabe na geração. A prioridade 1
+primeiro a prioridade menos importante (3), depois a 2, e dentro de cada uma
+começa pelo maior consumo. Ela para assim que o consumo cabe na geração. Na
+regra 1 o corte não depende do déficit: sai tudo que não é essencial, para a
+reserva se recuperar o mais rápido possível. A prioridade 1
 (oxigênio, água, controle térmico e comunicação) nunca entra na lista — há um
 teste automatizado que verifica isso para 28 combinações de reserva e geração.
 
@@ -124,13 +130,17 @@ o mesmo resultado esperado pelo enunciado (≈ 27). O exemplo do enunciado
 automatizado: a reta sai `2,5 × vento + 0` e a previsão para 11 é 27,5.
 
 A previsão alimenta a decisão. Para a próxima janela de 6 horas, o sistema
-estima a geração a partir do clima previsto, projeta como a reserva vai ficar
-e aplica **as mesmas regras** sobre esse futuro. Se o resultado for pior que
-o presente, emite um aviso preventivo.
+estima a geração a partir do clima previsto (arredondada a 0,1 kW, a
+resolução das medições), projeta como a reserva vai ficar e aplica **as
+mesmas regras** sobre esse futuro. Se o resultado for pior que o presente —
+nível mais grave, ou mesmo nível com a reserva caindo —, emite um aviso
+preventivo.
 
 Limite do modelo: a reta só vale dentro da faixa observada (vento de 4 a
 15 m/s, irradiância de 100 a 1000 W/m²). Uma turbina real não gera mais para
-sempre com mais vento; fora da faixa, a previsão não é confiável.
+sempre com mais vento: a mesma reta daria 150 kW para um vento de 60 m/s, o
+que não faz sentido. Por isso, quando o clima previsto está fora da faixa, o
+relatório mostra `CUIDADO: extrapolação` ao lado da previsão.
 
 ## 4. Como o sistema melhora o uso de energia
 
@@ -139,8 +149,8 @@ sempre com mais vento; fora da faixa, a previsão não é confiável.
   essenciais. Ninguém precisa decidir sob pressão o que cortar: a ordem já
   está definida pelas prioridades.
 - **Corta só o necessário.** No modo economia o corte para quando o consumo
-  iguala a geração (de 70 para 40 kW). A iluminação fica ligada porque não
-  era preciso desligá-la.
+  iguala a geração (de 70 para 40 kW). A iluminação fica ligada porque, para
+  a geração de agora, não é preciso desligá-la.
 - **Aproveita o que sobra.** No cenário `nominal` a geração (83 kW) supera
   o consumo (70 kW) e a saída é `SUGESTÃO: armazenar energia excedente`. Se
   a bateria já estiver cheia, a sugestão muda para usar o excedente em cargas
@@ -148,13 +158,19 @@ sempre com mais vento; fora da faixa, a previsão não é confiável.
 - **Age antes do problema.** No cenário `preventivo` tudo está normal agora
   (reserva 65 %, saldo de +5 kW). Um sistema só reativo não faria nada. Mas a
   previsão de clima (vento 5 m/s, irradiância 300 W/m²) dá geração de apenas
-  30,6 kW, e a reserva cairia para 6 % em seis horas. A saída é:
+  30,6 kW contra 70 kW de consumo. A saída é:
 
 ```text
 DECISÃO: NORMAL: operação normal
-PREVENTIVO: situação prevista CRÍTICO — antecipar o desligamento de
-            Laboratório, Lazer, Estufa, Iluminação
+PREVENTIVO: em 6 h a reserva vai de 65.0 % a 5.9 % (situação CRÍTICO).
+            Desligando já Laboratório, Lazer, Estufa, Iluminação, a reserva
+            fica em 59.9 %.
 ```
+
+O aviso traz o ganho em números: esperar custa 54 pontos de reserva. O mesmo
+acontece no cenário `economia`, em escala menor: o corte de agora resolve o
+presente, mas o vento vai cair, e o sistema recomenda desligar também a
+iluminação para terminar a janela com 29,7 % em vez de 20,7 %.
 
 Essa é a passagem de um sistema reativo para um preditivo: a mesma lógica de
 regras, aplicada a dados que a regressão estimou.
@@ -167,5 +183,5 @@ Código, dados, testes e este relatório estão em:
 `entrega-fase2/`
 
 Para executar: `cd entrega-fase2 && python src/colonia.py economia`. O
-`README.md` da pasta traz a saída completa do programa e as instruções dos 59
+`README.md` da pasta traz a saída completa do programa e as instruções dos 88
 testes automatizados.

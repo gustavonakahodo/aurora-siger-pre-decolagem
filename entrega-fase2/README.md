@@ -35,6 +35,11 @@ e **o que esperar das próximas horas**. São quatro passos, um por módulo:
 
 `src/colonia.py` junta os quatro e imprime o relatório.
 
+O sistema também se protege de dados ruins: recusa leituras impossíveis
+(reserva fora de 0–100 %, geração negativa) com uma mensagem clara, e avisa
+quando o clima previsto está fora da faixa do histórico — nesse caso a reta
+está extrapolando e a previsão merece desconfiança.
+
 ### Regras de decisão
 
 | Condição | Saída |
@@ -44,6 +49,11 @@ e **o que esperar das próximas horas**. São quatro passos, um por módulo:
 | reserva < 50 % | `ALERTA: reduzir consumo` |
 | consumo > geração, reserva ≥ 50 % | `ATENÇÃO: consumo acima da geração — usando a reserva` |
 | nenhuma das anteriores | `NORMAL: operação normal` |
+
+As regras são testadas nessa ordem e vale a primeira que se aplica. A mesma
+tabela é aplicada duas vezes: às leituras de agora e à projeção da próxima
+janela. Se a projeção for pior — nível mais grave, ou mesmo nível com a
+reserva caindo —, a decisão ganha uma linha `PREVENTIVO`.
 
 ## Estrutura
 
@@ -59,7 +69,7 @@ entrega-fase2/
 │   ├── previsao.py         # LÓGICA: regressão linear
 │   ├── decisoes.py         # DECISÕES: regras e prioridades
 │   └── colonia.py          # integração, relatório e linha de comando
-├── tests/                  # 59 testes automatizados (um arquivo por módulo)
+├── tests/                  # 88 testes automatizados (um arquivo por módulo)
 └── docs/
     ├── relatorio.md        # relatório da entrega
     └── relatorio.pdf       # o mesmo relatório, em PDF
@@ -67,7 +77,8 @@ entrega-fase2/
 
 ## Como executar
 
-Python 3.10 ou superior. Nenhuma biblioteca externa é necessária.
+Python 3.10 ou superior. Nenhuma biblioteca externa é necessária. Se o seu
+sistema não tiver o comando `python`, use `python3`.
 
 ```bash
 cd entrega-fase2
@@ -126,10 +137,10 @@ Cenário: economia — Reserva baixa e consumo alto: o exemplo do enunciado
   Colônia
     Sistema energético
       Geração
-        Solar
-        Eólico
+        Solar                     21.0 kW   gerando
+        Eólico                    19.0 kW   gerando
       Armazenamento
-        Baterias                   400 kWh
+        Baterias                   400 kWh  reserva em 40.0 %
     Suporte à vida
       Oxigênio                    12.0 kW   prioridade 1   LIGADO
       Água                         8.0 kW   prioridade 1   LIGADO
@@ -146,8 +157,7 @@ Cenário: economia — Reserva baixa e consumo alto: o exemplo do enunciado
   Geração ........... 40.0 kW (solar 21.0 + eólica 19.0)
   Consumo ........... 70.0 kW (soma dos sistemas ligados)
   Saldo ............. -30.0 kW
-  Análise ........... ALERTA: consumo maior que geração (a reserva cobre 5.3
-                      h)
+  Análise ........... ALERTA: consumo maior que geração (reserva cobre 5.3 h)
   Decisão ........... ALERTA: reduzir consumo — modo economia ativado
     regra: reserva 40.0 % < 50 % E consumo 70.0 kW > 60 kW → modo economia
   Desligar .......... Laboratório, Lazer, Estufa
@@ -159,30 +169,32 @@ Cenário: economia — Reserva baixa e consumo alto: o exemplo do enunciado
 
 4. PRÓXIMA JANELA (6 h)
   Clima previsto .... vento 6 m/s, irradiância 200 W/m²
-  Geração prevista .. 27.2 kW (solar 12.1 + eólica 15.0)
+  Geração prevista .. 27.1 kW (solar 12.1 + eólica 15.0)
   Consumo ........... 40.0 kW
-  Saldo previsto .... -12.8 kW
+  Saldo previsto .... -12.9 kW
   Reserva projetada . 20.7 %
-  Análise ........... ALERTA: consumo maior que geração (a reserva cobre 6.5
-                      h)
+  Análise ........... ALERTA: consumo maior que geração (reserva cobre 6.4 h)
   Decisão ........... ALERTA: reduzir consumo
     regra: reserva 20.7 % < 50 % → reduzir consumo
-    regra: mesmo após os cortes o consumo supera a geração: os essenciais
-           seguem ligados, alimentados pela reserva
+    regra: mesmo com os cortes possíveis o consumo supera a geração: o que
+           ficou ligado é alimentado pela reserva
   Desligar .......... Iluminação
   Consumo após ...... 34.0 kW
-  Tendência ......... ESTÁVEL
+  Tendência ......... PIORA
 
 ==============================================================================
 DECISÃO: ALERTA: reduzir consumo — modo economia ativado
+PREVENTIVO: em 6 h a reserva vai de 40.0 % a 20.7 % (situação ALERTA).
+            Desligando já Iluminação, a reserva fica em 29.7 %.
 ==============================================================================
 ```
 
 ### Saída — `python src/colonia.py preventivo`
 
 Aqui está a diferença entre reagir e prever: a situação atual é normal, mas
-a previsão de pouco vento e pouco sol levaria a reserva a 6 % em seis horas.
-O sistema avisa antes.
+a previsão de pouco vento e pouco sol levaria a reserva de 65 % a 5,9 % em
+seis horas. O sistema avisa antes e mostra o ganho de agir já: com os cortes
+antecipados, a reserva termina a janela em 59,9 %.
 
 ```text
 ==============================================================================
@@ -195,10 +207,10 @@ Cenário: preventivo — Tudo bem agora, mas a previsão indica queda de vento e
   Colônia
     Sistema energético
       Geração
-        Solar
-        Eólico
+        Solar                     42.0 kW   gerando
+        Eólico                    33.0 kW   gerando
       Armazenamento
-        Baterias                   400 kWh
+        Baterias                   400 kWh  reserva em 65.0 %
     Suporte à vida
       Oxigênio                    12.0 kW   prioridade 1   LIGADO
       Água                         8.0 kW   prioridade 1   LIGADO
@@ -228,21 +240,21 @@ Cenário: preventivo — Tudo bem agora, mas a previsão indica queda de vento e
   Geração prevista .. 30.6 kW (solar 18.1 + eólica 12.5)
   Consumo ........... 70.0 kW
   Saldo previsto .... -39.4 kW
-  Reserva projetada . 6.0 %
-  Análise ........... ALERTA: consumo maior que geração (a reserva cobre 0.6
-                      h)
+  Reserva projetada . 5.9 %
+  Análise ........... ALERTA: consumo maior que geração (reserva cobre 0.6 h)
   Decisão ........... CRÍTICO: manter apenas sistemas essenciais
-    regra: reserva 6.0 % < 20 % → desligar tudo que não é essencial
-    regra: mesmo após os cortes o consumo supera a geração: os essenciais
-           seguem ligados, alimentados pela reserva
+    regra: reserva 5.9 % < 20 % → desligar tudo que não é essencial
+    regra: mesmo com os cortes possíveis o consumo supera a geração: o que
+           ficou ligado é alimentado pela reserva
   Desligar .......... Laboratório, Lazer, Estufa, Iluminação
   Consumo após ...... 34.0 kW
   Tendência ......... PIORA
 
 ==============================================================================
 DECISÃO: NORMAL: operação normal
-PREVENTIVO: situação prevista CRÍTICO — antecipar o desligamento de
-            Laboratório, Lazer, Estufa, Iluminação
+PREVENTIVO: em 6 h a reserva vai de 65.0 % a 5.9 % (situação CRÍTICO).
+            Desligando já Laboratório, Lazer, Estufa, Iluminação, a reserva
+            fica em 59.9 %.
 ==============================================================================
 ```
 
