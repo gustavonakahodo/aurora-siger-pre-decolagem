@@ -82,3 +82,41 @@ def test_gerador_nao_e_consumidor(colonia):
 def test_todo_cenario_so_liga_subsistemas_existentes(colonia):
     for cenario in colonia["cenarios"].values():
         dados.consumidores_ligados(colonia["sistemas"], cenario["ligados"])
+
+
+def _cenario(**mudancas):
+    cenario = {
+        "reserva_pct": 50.0, "geracao_solar_kw": 10.0, "geracao_eolica_kw": 10.0,
+        "previsao_clima": {"vento_ms": 8, "irradiancia_wm2": 400},
+        "ligados": ["suporte_vida/oxigenio"],
+    }
+    cenario.update(mudancas)
+    return cenario
+
+
+def test_cenario_valido_passa_na_validacao():
+    dados.validar_cenario("teste", _cenario())
+    dados.validar_cenario("teste", _cenario(reserva_pct=0))
+    dados.validar_cenario("teste", _cenario(reserva_pct=100))
+
+
+@pytest.mark.parametrize("mudanca, trecho", [
+    ({"reserva_pct": -1}, "entre 0 e 100"),
+    ({"reserva_pct": 100.1}, "entre 0 e 100"),
+    ({"geracao_solar_kw": -5}, "geração solar"),
+    ({"geracao_eolica_kw": -0.1}, "geração eólica"),
+    ({"previsao_clima": {"vento_ms": -3, "irradiancia_wm2": 400}}, "vento"),
+    ({"previsao_clima": {"vento_ms": 3, "irradiancia_wm2": -1}}, "irradiância"),
+    ({"ligados": ["habitat/lazer", "habitat/lazer"]}, "repetido"),
+])
+def test_leituras_impossiveis_sao_recusadas(mudanca, trecho):
+    with pytest.raises(ValueError, match=trecho):
+        dados.validar_cenario("teste", _cenario(**mudanca))
+
+
+def test_carregar_cenario_valida_as_leituras(colonia):
+    import copy
+    alterada = copy.deepcopy(colonia)
+    alterada["cenarios"]["nominal"]["reserva_pct"] = 140
+    with pytest.raises(ValueError, match="nominal"):
+        dados.carregar_cenario(alterada, "nominal")

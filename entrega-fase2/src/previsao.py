@@ -40,3 +40,12 @@ def r2(xs: list[float], ys: list[float], a: float, b: float) -> float:
         return 1.0
     residuo = sum((y - (a * x + b)) ** 2 for x, y in zip(xs, ys))
     return 1.0 - residuo / total
+
+
+def fora_da_faixa(xs: list[float], x: float) -> bool:
+    """Indica se x está fora do intervalo observado no histórico.
+
+    Fora dele a reta é extrapolação: nada nos dados garante que a relação
+    continue linear.
+    """
+    return not min(xs) <= x <= max(xs)

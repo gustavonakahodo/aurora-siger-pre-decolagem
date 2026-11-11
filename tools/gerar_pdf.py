@@ -42,9 +42,9 @@ img { display: block; margin: 14px auto; max-width: 100%; max-height: 235mm;
 
 def main() -> None:
     entrega = sys.argv[1] if len(sys.argv) > 1 else "entrega-fase1"
-    ORIGEM = RAIZ / entrega / "docs" / "relatorio.md"
-    DESTINO = RAIZ / entrega / "docs" / "relatorio.pdf"
-    texto = ORIGEM.read_text(encoding="utf-8")
+    origem = RAIZ / entrega / "docs" / "relatorio.md"
+    destino = RAIZ / entrega / "docs" / "relatorio.pdf"
+    texto = origem.read_text(encoding="utf-8")
     # O título do PDF é o primeiro cabeçalho do Markdown.
     titulo = next((linha[2:].strip() for linha in texto.splitlines()
                    if linha.startswith("# ")), "Relatório")
@@ -53,7 +53,7 @@ def main() -> None:
     )
     # O HTML é escrito em um diretório temporário, então as imagens referenciadas
     # de forma relativa precisam de uma base apontando para docs/.
-    base = ORIGEM.parent.as_uri() + "/"
+    base = origem.parent.as_uri() + "/"
     html = (f"<!doctype html><html lang='pt-BR'><head><meta charset='utf-8'>"
             f"<base href='{base}'>"
             f"<title>{html_lib.escape(titulo)}</title><style>{ESTILO}</style></head>"
@@ -64,10 +64,10 @@ def main() -> None:
         caminho_html.write_text(html, encoding="utf-8")
         subprocess.run(
             [CHROME, "--headless", "--disable-gpu", "--no-pdf-header-footer",
-             f"--print-to-pdf={DESTINO}", caminho_html.as_uri()],
+             f"--print-to-pdf={destino}", caminho_html.as_uri()],
             check=True, capture_output=True,
         )
-    print(f"PDF gerado: {DESTINO} ({DESTINO.stat().st_size // 1024} KB)")
+    print(f"PDF gerado: {destino} ({destino.stat().st_size // 1024} KB)")
 
 
 if __name__ == "__main__":

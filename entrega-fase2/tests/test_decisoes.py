@@ -56,7 +56,7 @@ def test_reserva_critica_mantem_apenas_essenciais():
     assert decisao.nivel == "CRÍTICO"
     assert set(decisao.desligar) == {"Laboratório", "Lazer", "Estufa", "Iluminação"}
     assert decisao.consumo_apos_kw == 34
-    assert "essenciais seguem ligados" in decisao.regras[-1]
+    assert "alimentado pela reserva" in decisao.regras[-1]
 
 
 def test_suporte_a_vida_nunca_e_desligado():
@@ -102,6 +102,54 @@ def test_planejar_cortes_sem_reducao_nao_corta():
 def test_comparar_decisoes():
     normal = decisoes.decidir(80, 70, 83, TODOS)
     critico = decisoes.decidir(5, 70, 30, TODOS)
-    assert decisoes.comparar(normal, critico) == "PIORA"
-    assert decisoes.comparar(critico, normal) == "MELHORA"
-    assert decisoes.comparar(normal, normal) == "ESTÁVEL"
+    assert decisoes.comparar(normal, critico, 80, 5) == "PIORA"
+    assert decisoes.comparar(critico, normal, 5, 80) == "MELHORA"
+    assert decisoes.comparar(normal, normal, 80, 80) == "ESTÁVEL"
+
+
+def test_mesmo_nivel_desempata_pelo_rumo_da_reserva():
+    alerta = decisoes.decidir(40, 50, 40, TODOS)
+    assert decisoes.comparar(alerta, alerta, 40, 21) == "PIORA"
+    assert decisoes.comparar(alerta, alerta, 40, 48) == "MELHORA"
+    assert decisoes.comparar(alerta, alerta, 40, 40.5) == "ESTÁVEL"
+
+
+def test_nivel_pesa_mais_que_a_reserva():
+    normal = decisoes.decidir(80, 70, 83, TODOS)
+    alerta = decisoes.decidir(40, 50, 40, TODOS)
+    # reserva subindo não compensa uma decisão mais grave
+    assert decisoes.comparar(normal, alerta, 30, 45) == "PIORA"
+
+
+PISCINA = {"caminho": "habitat/piscina", "rotulo": "Piscina",
+           "consumo_kw": 5.0, "prioridade": 4}
+
+
+def test_prioridade_acima_de_3_e_cortada_primeiro():
+    cortes = decisoes.planejar_cortes(TODOS + [PISCINA], 4)
+    assert [c["rotulo"] for c in cortes] == ["Piscina"]
+
+
+def test_reserva_critica_desliga_qualquer_prioridade_nao_essencial():
+    decisao = decisoes.decidir(15, 75, 16, TODOS + [PISCINA])
+    assert "Piscina" in decisao.desligar
+    assert decisao.consumo_apos_kw == 34
+
+
+def test_modo_economia_desliga_tudo_acima_da_prioridade_2():
+    decisao = decisoes.decidir(40, 75, 90, TODOS + [PISCINA])
+    assert decisao.desligar == ("Piscina", "Laboratório", "Lazer")
+
+
+def test_alerta_sem_nada_a_cortar_explica_o_que_fazer():
+    essenciais = [c for c in TODOS if c["prioridade"] == 1]
+    decisao = decisoes.decidir(43, 34, 52, essenciais)
+    assert decisao.desligar == ()
+    assert "não ligar novas cargas" in decisao.regras[-1]
+
+
+def test_so_essenciais_em_deficit_explica_que_a_reserva_cobre():
+    essenciais = [c for c in TODOS if c["prioridade"] == 1]
+    decisao = decisoes.decidir(15, 34, 16, essenciais)
+    assert decisao.desligar == ()
+    assert "alimentado pela reserva" in decisao.regras[-1]
