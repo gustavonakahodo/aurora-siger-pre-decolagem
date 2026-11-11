@@ -1,0 +1,3 @@
+# O código de src/ usa apenas a biblioteca padrão do Python (>= 3.10).
+# A dependência abaixo serve apenas para rodar os testes.
+pytest>=8.0
