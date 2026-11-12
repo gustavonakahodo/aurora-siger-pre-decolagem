@@ -12,26 +12,12 @@ fica em sua própria pasta, com código, testes, README e relatório.
 | Fase | Pasta | O que é |
 |---|---|---|
 | 1 | [`entrega-fase1/`](entrega-fase1/) | Verificador de telemetria pré-lançamento da missão Aurora-1 |
-| 3 | [`entrega-fase3/`](entrega-fase3/) | Sistema integrado de energia da colônia |
+| 3 | [repositório próprio](https://github.com/gustavonakahodo/aurora-siger-fase3) | Sistema integrado de energia da colônia |
 
 ## Fase 3 — A Aurora Estabelece os Primeiros Sistemas da Colônia
 
-Um sistema em Python que organiza os dados da colônia (listas, chave-valor e
-uma hierarquia de sistemas), analisa o balanço entre geração, consumo e
-reserva, decide por regras o que fazer — desligando primeiro o que não é
-essencial e nunca o suporte à vida — e prevê por regressão linear a geração
-solar e eólica das próximas horas, para avisar antes de o problema chegar.
-Exemplo: reserva = 40 e consumo = 70 → `ALERTA: reduzir consumo`.
-
-```bash
-cd entrega-fase3
-python src/colonia.py economia
-```
-
-- **[`entrega-fase3/README.md`](entrega-fase3/README.md)** — funcionamento,
-  instruções e exemplo de entrada e saída. **Comece por aqui.**
-- **[`entrega-fase3/docs/relatorio.pdf`](entrega-fase3/docs/relatorio.pdf)** —
-  relatório (4 páginas), também em [Markdown](entrega-fase3/docs/relatorio.md).
+A Fase 3 tem repositório próprio:
+**<https://github.com/gustavonakahodo/aurora-siger-fase3>**.
 
 ## Fase 1 — Verificação de telemetria pré-lançamento
 
