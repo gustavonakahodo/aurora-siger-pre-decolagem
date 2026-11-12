@@ -1,6 +1,6 @@
 # Colônia Aurora Siger — Sistema Integrado de Energia
 
-**Atividade Integradora — FIAP, Fase 2**
+**Atividade Integradora — FIAP, Fase 3: A Aurora Estabelece os Primeiros Sistemas da Colônia**
 
 | | |
 |---|---|
@@ -8,7 +8,7 @@
 | **RM** | 576337 |
 | **Turma** | Ciência da Computação (On-Line) |
 | **Data** | 11 de novembro de 2026 |
-| **Repositório** | <https://github.com/gustavonakahodo/aurora-siger-pre-decolagem> (pasta `entrega-fase2/`) |
+| **Repositório** | <https://github.com/gustavonakahodo/aurora-siger-pre-decolagem> (pasta `entrega-fase3/`) |
 
 ---
 
@@ -181,8 +181,8 @@ regras, aplicada a dados que a regressão estimou.
 Código, dados, testes e este relatório estão em:
 
 **<https://github.com/gustavonakahodo/aurora-siger-pre-decolagem>** — pasta
-`entrega-fase2/`
+`entrega-fase3/`
 
-Para executar: `cd entrega-fase2 && python src/colonia.py economia`. O
+Para executar: `cd entrega-fase3 && python src/colonia.py economia`. O
 `README.md` da pasta traz a saída completa do programa e as instruções dos 101
 testes automatizados.
